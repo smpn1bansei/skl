@@ -109,7 +109,6 @@
                             <th colspan="2" class="border border-gray-300 p-1 md:p-2">Kelas VII</th>
                             <th colspan="2" class="border border-gray-300 p-1 md:p-2">Kelas VIII</th>
                             <th colspan="1" class="border border-gray-300 p-1 md:p-2">Kelas IX</th>
-                            <th rowspan="2" class="border border-gray-300 p-1 md:p-2 w-12 md:w-16">Rata-Rata<br>Nilai</th>
                         </tr>
                         <tr>
                             <th class="border border-gray-300 p-1 md:p-2 w-12 md:w-16 whitespace-nowrap">Smt 1</th>
@@ -144,20 +143,24 @@
         const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7 };
 
         // Pemetaan indeks nilai tiap mata pelajaran [Kls7Smt1, Kls7Smt2, Kls8Smt1, Kls8Smt2, Kls9Smt1]
-        // Tambahan: avgIndex untuk nilai Rata-Rata (Kolom BL sampai BV -> Indeks 63 sampai 73)
+        // Di-update: Kolom rata-rata menyisip di antara tiap semester, sehingga indeks bergeser.
         const SUBJECTS = [
-            { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 19, 30, 41, 52], avgIndex: 63 },
-            { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 20, 31, 42, 53], avgIndex: 64 },
-            { nama: "Bahasa Indonesia (BI)", indices: [10, 21, 32, 43, 54], avgIndex: 65 },
-            { nama: "Bahasa Inggris (B.ING)", indices: [11, 22, 33, 44, 55], avgIndex: 66 },
-            { nama: "Matematika (MTK)", indices: [12, 23, 34, 45, 56], avgIndex: 67 },
-            { nama: "Ilmu Pengetahuan Alam (IPA)", indices: [13, 24, 35, 46, 57], avgIndex: 68 },
-            { nama: "Ilmu Pengetahuan Sosial (IPS)", indices: [14, 25, 36, 47, 58], avgIndex: 69 },
-            { nama: "Seni Budaya (SB)", indices: [15, 26, 37, 48, 59], avgIndex: 70 },
-            { nama: "Informatika (INK)", indices: [16, 27, 38, 49, 60], avgIndex: 71 },
-            { nama: "Pendidikan Jasmani Olahraga Kesehatan (Penjas)", indices: [17, 28, 39, 50, 61], avgIndex: 72 },
-            { nama: "Budaya Melayu Riau (BMR)", indices: [18, 29, 40, 51, 62], avgIndex: 73 }
+            { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 20, 32, 44, 56] },
+            { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 21, 33, 45, 57] },
+            { nama: "Bahasa Indonesia (BI)", indices: [10, 22, 34, 46, 58] },
+            { nama: "Bahasa Inggris (B.ING)", indices: [11, 23, 35, 47, 59] },
+            { nama: "Matematika (MTK)", indices: [12, 24, 36, 48, 60] },
+            { nama: "Ilmu Pengetahuan Alam (IPA)", indices: [13, 25, 37, 49, 61] },
+            { nama: "Ilmu Pengetahuan Sosial (IPS)", indices: [14, 26, 38, 50, 62] },
+            { nama: "Seni Budaya (SB)", indices: [15, 27, 39, 51, 63] },
+            { nama: "Informatika (INK)", indices: [16, 28, 40, 52, 64] },
+            { nama: "Pendidikan Jasmani Olahraga Kesehatan (Penjas)", indices: [17, 29, 41, 53, 65] },
+            { nama: "Budaya Melayu Riau (BMR)", indices: [18, 30, 42, 54, 66] }
         ];
+
+        // Indeks untuk nilai Rata-Rata per Semester 
+        // Terletak tepat setelah nilai BMR masing-masing semester
+        const AVG_INDICES = [19, 31, 43, 55, 67];
 
         let databaseCache = null; // Menyimpan data agar tidak perlu download berulang kali
 
@@ -253,9 +256,8 @@
                 const v81 = row[subject.indices[2]] || '-';
                 const v82 = row[subject.indices[3]] || '-';
                 const v91 = row[subject.indices[4]] || '-';
-                const vAvg = row[subject.avgIndex] || '-';
 
-                // Kolom di baris tabel: No | Mata Pelajaran | Kls7Smt1 | Kls7Smt2 | Kls8Smt1 | Kls8Smt2 | Kls9Smt1 | Rata-Rata
+                // Kolom di baris tabel: No | Mata Pelajaran | Kls7Smt1 | Kls7Smt2 | Kls8Smt1 | Kls8Smt2 | Kls9Smt1
                 tr.innerHTML = `
                     <td class="border border-gray-300 p-1 md:p-2">${index + 1}</td>
                     <td class="border border-gray-300 p-1 md:p-2 text-left font-medium text-gray-800">${subject.nama}</td>
@@ -264,10 +266,33 @@
                     <td class="border border-gray-300 p-1 md:p-2">${v81}</td>
                     <td class="border border-gray-300 p-1 md:p-2">${v82}</td>
                     <td class="border border-gray-300 p-1 md:p-2">${v91}</td>
-                    <td class="border border-gray-300 p-1 md:p-2 font-bold text-blue-700">${vAvg}</td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            // ==========================================
+            // Menambahkan Baris RATA-RATA NILAI di bawah
+            // ==========================================
+            const trAvg = document.createElement('tr');
+            trAvg.className = 'bg-blue-100 font-bold text-blue-800'; // Diberi warna agar menonjol
+            
+            // Ambil data rata-rata masing-masing semester
+            const avg71 = row[AVG_INDICES[0]] || '-';
+            const avg72 = row[AVG_INDICES[1]] || '-';
+            const avg81 = row[AVG_INDICES[2]] || '-';
+            const avg82 = row[AVG_INDICES[3]] || '-';
+            const avg91 = row[AVG_INDICES[4]] || '-';
+
+            // Colspan=2 menggabungkan kolom 'No' dan 'Mata Pelajaran'
+            trAvg.innerHTML = `
+                <td class="border border-gray-300 p-1 md:p-2 text-right uppercase" colspan="2">Rata-Rata Nilai</td>
+                <td class="border border-gray-300 p-1 md:p-2">${avg71}</td>
+                <td class="border border-gray-300 p-1 md:p-2">${avg72}</td>
+                <td class="border border-gray-300 p-1 md:p-2">${avg81}</td>
+                <td class="border border-gray-300 p-1 md:p-2">${avg82}</td>
+                <td class="border border-gray-300 p-1 md:p-2">${avg91}</td>
+            `;
+            tbody.appendChild(trAvg);
         }
     </script>
 </body>
