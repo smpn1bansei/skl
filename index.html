@@ -36,9 +36,14 @@
                 <input type="text" id="nisnInput" placeholder="Masukkan NISN Siswa..." 
                     class="flex-grow border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onkeypress="if(event.key === 'Enter') cariData()">
-                <button onclick="cariData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition duration-200">
-                    <i class="fas fa-search mr-1"></i> Cari Data
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="cariData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition duration-200 whitespace-nowrap">
+                        <i class="fas fa-search mr-1"></i> Cari Data
+                    </button>
+                    <button onclick="resetData()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md font-medium transition duration-200 whitespace-nowrap">
+                        <i class="fas fa-undo mr-1"></i> Reset
+                    </button>
+                </div>
             </div>
             <p class="text-sm text-gray-500 mt-2">Pastikan NISN yang dimasukkan benar (Contoh: 106576830).</p>
         </div>
@@ -123,6 +128,7 @@
         const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7 };
 
         // Pemetaan indeks nilai tiap mata pelajaran [Kls7Smt1, Kls7Smt2, Kls8Smt1, Kls8Smt2, Kls9Smt1]
+        // Berdasarkan struktur 11 Mapel yang memanjang ke samping untuk masing-masing semester
         const SUBJECTS = [
             { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 19, 30, 41, 52] },
             { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 20, 31, 42, 53] },
@@ -205,6 +211,16 @@
             }
         }
 
+        // Fungsi Reset untuk mengosongkan layar dan input
+        function resetData() {
+            document.getElementById('nisnInput').value = '';
+            document.getElementById('resultArea').classList.add('hidden');
+            document.getElementById('errorBox').classList.add('hidden');
+            document.getElementById('loading').classList.add('hidden');
+            // Kembalikan fokus kursor ke input box
+            document.getElementById('nisnInput').focus();
+        }
+
         function tampilkanData(row) {
             // Isi Biodata
             document.getElementById('resNis').textContent = row[INFO_MAP.nis] || '-';
@@ -219,17 +235,19 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = ''; // Kosongkan tabel sebelumnya
 
+            // Looping ke 11 Mata Pelajaran secara berurutan
             SUBJECTS.forEach((subject, index) => {
                 const tr = document.createElement('tr');
                 tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 
-                // Ambil nilai berdasarkan index kolom di TSV, kosongkan jika tidak ada
+                // Ambil nilai berdasarkan index kolom di TSV (diisi '-' jika nilai kosong/tidak ada)
                 const v71 = row[subject.indices[0]] || '-';
                 const v72 = row[subject.indices[1]] || '-';
                 const v81 = row[subject.indices[2]] || '-';
                 const v82 = row[subject.indices[3]] || '-';
                 const v91 = row[subject.indices[4]] || '-';
 
+                // Kolom di baris tabel: No | Mata Pelajaran | Kls7Smt1 | Kls7Smt2 | Kls8Smt1 | Kls8Smt2 | Kls9Smt1
                 tr.innerHTML = `
                     <td class="border border-gray-300 p-2">${index + 1}</td>
                     <td class="border border-gray-300 p-2 text-left font-medium text-gray-800">${subject.nama}</td>
