@@ -16,6 +16,16 @@
             .kop-surat { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 3px solid black; padding-bottom: 10px;}
         }
         .kop-surat { display: none; }
+
+        /* Menyembunyikan panah atas-bawah pada input type number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
@@ -36,9 +46,10 @@
         <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-6 no-print">
             <h2 class="text-lg font-semibold mb-4 text-gray-700">Pencarian Siswa</h2>
             <div class="flex flex-col md:flex-row gap-3">
-                <input type="text" id="nisnInput" placeholder="Masukkan NISN Siswa..." 
+                <input type="number" id="nisnInput" placeholder="Masukkan 10 Digit NISN Siswa..." 
                     class="flex-grow border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                    onkeypress="if(event.key === 'Enter') cariData()">
+                    onkeypress="if(event.key === 'Enter') cariData()"
+                    oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);">
                 <div class="flex flex-wrap gap-2 justify-end">
                     <button onclick="cariData()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 md:px-6 py-2 rounded-md font-medium transition duration-200 whitespace-nowrap flex-grow sm:flex-grow-0 text-center justify-center">
                         <i class="fas fa-search mr-1"></i> Cari
@@ -48,7 +59,7 @@
                     </button>
                 </div>
             </div>
-            <p class="text-xs md:text-sm text-gray-500 mt-2">Pastikan NISN yang dimasukkan benar (Contoh: 106576830).</p>
+            <p class="text-xs md:text-sm text-gray-500 mt-2">Pastikan NISN yang dimasukkan benar berjumlah 10 digit (Contoh: 1065768301).</p>
         </div>
 
         <!-- Status Loading & Error -->
@@ -98,6 +109,7 @@
                             <th colspan="2" class="border border-gray-300 p-1 md:p-2">Kelas VII</th>
                             <th colspan="2" class="border border-gray-300 p-1 md:p-2">Kelas VIII</th>
                             <th colspan="1" class="border border-gray-300 p-1 md:p-2">Kelas IX</th>
+                            <th rowspan="2" class="border border-gray-300 p-1 md:p-2 w-12 md:w-16">Rata-Rata<br>Nilai</th>
                         </tr>
                         <tr>
                             <th class="border border-gray-300 p-1 md:p-2 w-12 md:w-16 whitespace-nowrap">Smt 1</th>
@@ -132,19 +144,19 @@
         const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7 };
 
         // Pemetaan indeks nilai tiap mata pelajaran [Kls7Smt1, Kls7Smt2, Kls8Smt1, Kls8Smt2, Kls9Smt1]
-        // Berdasarkan struktur 11 Mapel yang memanjang ke samping untuk masing-masing semester
+        // Tambahan: avgIndex untuk nilai Rata-Rata (Kolom BL sampai BV -> Indeks 63 sampai 73)
         const SUBJECTS = [
-            { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 19, 30, 41, 52] },
-            { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 20, 31, 42, 53] },
-            { nama: "Bahasa Indonesia (BI)", indices: [10, 21, 32, 43, 54] },
-            { nama: "Bahasa Inggris (B.ING)", indices: [11, 22, 33, 44, 55] },
-            { nama: "Matematika (MTK)", indices: [12, 23, 34, 45, 56] },
-            { nama: "Ilmu Pengetahuan Alam (IPA)", indices: [13, 24, 35, 46, 57] },
-            { nama: "Ilmu Pengetahuan Sosial (IPS)", indices: [14, 25, 36, 47, 58] },
-            { nama: "Seni Budaya (SB)", indices: [15, 26, 37, 48, 59] },
-            { nama: "Informatika (INK)", indices: [16, 27, 38, 49, 60] },
-            { nama: "Pendidikan Jasmani Olahraga Kesehatan (Penjas)", indices: [17, 28, 39, 50, 61] },
-            { nama: "Budaya Melayu Riau (BMR)", indices: [18, 29, 40, 51, 62] }
+            { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 19, 30, 41, 52], avgIndex: 63 },
+            { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 20, 31, 42, 53], avgIndex: 64 },
+            { nama: "Bahasa Indonesia (BI)", indices: [10, 21, 32, 43, 54], avgIndex: 65 },
+            { nama: "Bahasa Inggris (B.ING)", indices: [11, 22, 33, 44, 55], avgIndex: 66 },
+            { nama: "Matematika (MTK)", indices: [12, 23, 34, 45, 56], avgIndex: 67 },
+            { nama: "Ilmu Pengetahuan Alam (IPA)", indices: [13, 24, 35, 46, 57], avgIndex: 68 },
+            { nama: "Ilmu Pengetahuan Sosial (IPS)", indices: [14, 25, 36, 47, 58], avgIndex: 69 },
+            { nama: "Seni Budaya (SB)", indices: [15, 26, 37, 48, 59], avgIndex: 70 },
+            { nama: "Informatika (INK)", indices: [16, 27, 38, 49, 60], avgIndex: 71 },
+            { nama: "Pendidikan Jasmani Olahraga Kesehatan (Penjas)", indices: [17, 28, 39, 50, 61], avgIndex: 72 },
+            { nama: "Budaya Melayu Riau (BMR)", indices: [18, 29, 40, 51, 62], avgIndex: 73 }
         ];
 
         let databaseCache = null; // Menyimpan data agar tidak perlu download berulang kali
@@ -162,8 +174,13 @@
             const resultArea = document.getElementById('resultArea');
             const errorMsg = document.getElementById('errorMsg');
 
+            // Validasi Input
             if (!nisn) {
                 alert("Silakan masukkan NISN terlebih dahulu!");
+                return;
+            }
+            if (nisn.length < 10) {
+                alert("NISN tidak valid! Pastikan Anda memasukkan tepat 10 digit angka.");
                 return;
             }
 
@@ -236,8 +253,9 @@
                 const v81 = row[subject.indices[2]] || '-';
                 const v82 = row[subject.indices[3]] || '-';
                 const v91 = row[subject.indices[4]] || '-';
+                const vAvg = row[subject.avgIndex] || '-';
 
-                // Kolom di baris tabel: No | Mata Pelajaran | Kls7Smt1 | Kls7Smt2 | Kls8Smt1 | Kls8Smt2 | Kls9Smt1
+                // Kolom di baris tabel: No | Mata Pelajaran | Kls7Smt1 | Kls7Smt2 | Kls8Smt1 | Kls8Smt2 | Kls9Smt1 | Rata-Rata
                 tr.innerHTML = `
                     <td class="border border-gray-300 p-1 md:p-2">${index + 1}</td>
                     <td class="border border-gray-300 p-1 md:p-2 text-left font-medium text-gray-800">${subject.nama}</td>
@@ -246,6 +264,7 @@
                     <td class="border border-gray-300 p-1 md:p-2">${v81}</td>
                     <td class="border border-gray-300 p-1 md:p-2">${v82}</td>
                     <td class="border border-gray-300 p-1 md:p-2">${v91}</td>
+                    <td class="border border-gray-300 p-1 md:p-2 font-bold text-blue-700">${vAvg}</td>
                 `;
                 tbody.appendChild(tr);
             });
