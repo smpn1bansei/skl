@@ -8,14 +8,46 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* Styling khusus untuk saat dicetak (Ctrl+P) */
-        @media print {
-            body { background-color: white; }
-            .no-print { display: none !important; }
-            .print-area { width: 100%; box-shadow: none; border: none; padding: 0; }
-            th, td { border: 1px solid #000 !important; color: #000 !important; }
-            .kop-surat { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 3px solid black; padding-bottom: 10px;}
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
         }
-        .kop-surat { display: none; }
+
+        @media print {
+            body { 
+                background-color: white !important; 
+                color: black !important;
+                font-size: 11pt !important;
+            }
+            .no-print { display: none !important; }
+            
+            /* Hapus semua bayangan, border, dan padding berlebih di container utama */
+            .print-area { 
+                width: 100% !important; 
+                max-width: 100% !important;
+                box-shadow: none !important; 
+                border: none !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+            }
+
+            /* Paksa tabel agar garisnya solid hitam dan paddingnya rapat */
+            #resultArea table { width: 100% !important; font-size: 10pt !important; }
+            #resultArea th, #resultArea td { 
+                border: 1px solid black !important; 
+                padding: 4px 6px !important; 
+                color: black !important; 
+            }
+            #resultArea th {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* Bersihkan warna background sel khusus (seperti sel rata-rata) */
+            tr.bg-blue-50 { background-color: transparent !important; }
+            tr.bg-slate-50\/50 { background-color: transparent !important; }
+        }
 
         /* Menyembunyikan panah atas-bawah pada input type number */
         input[type=number]::-webkit-inner-spin-button, 
@@ -27,21 +59,11 @@
             -moz-appearance: textfield;
         }
         
-        /* Custom scrollbar untuk tabel agar lebih modern */
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #c1c1c1; 
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8; 
-        }
+        /* Custom scrollbar untuk tabel web */
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
     </style>
 </head>
 <body class="bg-slate-50 text-gray-800 font-sans min-h-screen flex flex-col selection:bg-blue-200">
@@ -120,44 +142,55 @@
         <div id="resultArea" class="hidden bg-white rounded-2xl shadow-md border border-slate-200 p-6 md:p-10 print-area relative">
             
             <!-- Tombol Cetak -->
-            <button onclick="window.print()" class="static mb-6 md:mb-0 md:absolute md:top-6 md:right-6 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95 w-full md:w-auto no-print flex items-center justify-center gap-2">
+            <button onclick="window.print()" class="static mb-6 md:mb-0 md:absolute md:top-6 md:right-6 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95 w-full md:w-auto no-print flex items-center justify-center gap-2 z-10">
                 <i class="fas fa-print"></i> Cetak SKNR
             </button>
 
-            <!-- Kop Surat (Hanya muncul saat diprint) -->
-            <div class="kop-surat hidden">
-                <h2 style="font-size: 24px; font-weight: bold; margin: 0;">SURAT KETERANGAN NILAI RAPOR (SKNR)</h2>
-                <h3 style="font-size: 18px; font-weight: bold; margin: 5px 0 0 0;">SMPN 1 BANDAR SEIKIJANG</h3>
-                <p style="margin: 5px 0 0 0;">Tahun Pelajaran 2025/2026</p>
+            <!-- Kop Surat Resmi (Hanya muncul saat diprint) -->
+            <div class="hidden print:flex flex-col items-center justify-center border-b-[3px] border-black pb-3 mb-6 relative">
+                <!-- Jika ada logo sekolah, bisa disisipkan menggunakan img tag absolute disini -->
+                <h2 class="text-xl font-bold uppercase tracking-wider mb-1">Pemerintah Kabupaten Pelalawan</h2>
+                <h2 class="text-xl font-bold uppercase tracking-wider mb-1">Dinas Pendidikan dan Kebudayaan</h2>
+                <h1 class="text-2xl font-extrabold uppercase tracking-widest mb-1">SMPN 1 Bandar Seikijang</h1>
+                <p class="text-sm m-0">Jl. Lintas Timur Km. 34 Bandar Seikijang, Kab. Pelalawan, Riau</p>
+                <div class="w-full border-b border-black mt-1"></div> <!-- Garis ganda -->
             </div>
 
-            <div class="flex items-center gap-3 border-b-2 border-slate-100 pb-3 mb-6 mt-2 md:mt-0">
-                <div class="bg-blue-100 text-blue-700 p-2 rounded-lg">
+            <!-- Judul Surat Print -->
+            <div class="hidden print:block text-center mb-6">
+                <h3 class="text-lg font-bold uppercase underline mb-1">Surat Keterangan Nilai Rapor (SKNR)</h3>
+                <p class="text-sm">Tahun Pelajaran 2025/2026</p>
+            </div>
+
+            <div class="flex items-center gap-3 border-b-2 border-slate-100 print:border-none print:pb-0 pb-3 mb-6 mt-2 md:mt-0 print:mt-0">
+                <div class="bg-blue-100 text-blue-700 p-2 rounded-lg print:hidden">
                     <i class="fas fa-user-graduate"></i>
                 </div>
-                <h3 class="text-lg md:text-xl font-bold text-slate-800">Biodata Siswa</h3>
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 print:hidden">Biodata Siswa</h3>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8 mb-10 text-xs sm:text-sm md:text-base bg-slate-50 p-5 rounded-xl border border-slate-100">
-                <div class="flex"><span class="w-32 text-slate-500 font-medium flex-shrink-0">NIS</span><span class="mr-2 text-slate-400">:</span><span id="resNis" class="font-bold text-slate-800">-</span></div>
-                <div class="flex"><span class="w-32 text-slate-500 font-medium flex-shrink-0">NISN</span><span class="mr-2 text-slate-400">:</span><span id="resNisn" class="font-bold text-slate-800">-</span></div>
-                <div class="flex"><span class="w-32 text-slate-500 font-medium flex-shrink-0">Nama Lengkap</span><span class="mr-2 text-slate-400">:</span><span id="resNama" class="font-bold text-slate-800 uppercase">-</span></div>
-                <div class="flex"><span class="w-32 text-slate-500 font-medium flex-shrink-0">Tempat, Tgl Lahir</span><span class="mr-2 text-slate-400">:</span><span id="resTtl" class="font-medium text-slate-800">-</span></div>
-                <div class="flex"><span class="w-32 text-slate-500 font-medium flex-shrink-0">Jenis Kelamin</span><span class="mr-2 text-slate-400">:</span><span id="resJenkel" class="font-medium text-slate-800">-</span></div>
-                <div class="flex"><span class="w-32 text-slate-500 font-medium flex-shrink-0">Kelas Terakhir</span><span class="mr-2 text-slate-400">:</span><span id="resKelas" class="font-medium text-slate-800">-</span></div>
-                <div class="flex md:col-span-2"><span class="w-32 text-slate-500 font-medium flex-shrink-0">Alamat</span><span class="mr-2 text-slate-400">:</span><span id="resAlamat" class="font-medium text-slate-800">-</span></div>
+            <!-- Biodata -->
+            <div class="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-y-3 print:gap-y-1 gap-x-8 print:gap-x-4 mb-10 print:mb-6 text-xs sm:text-sm md:text-base print:text-[11pt] bg-slate-50 print:bg-transparent p-5 print:p-0 rounded-xl border border-slate-100 print:border-none">
+                <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">NIS</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resNis" class="font-bold print:font-normal text-slate-800 print:text-black">-</span></div>
+                <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">NISN</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resNisn" class="font-bold print:font-normal text-slate-800 print:text-black">-</span></div>
+                <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Nama Lengkap</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resNama" class="font-bold text-slate-800 print:text-black uppercase">-</span></div>
+                <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Tempat, Tgl Lahir</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resTtl" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
+                <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Jenis Kelamin</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resJenkel" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
+                <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Kelas Terakhir</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resKelas" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
+                <div class="flex md:col-span-2 print:col-span-2"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Alamat</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resAlamat" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
             </div>
 
-            <div class="flex items-center gap-3 border-b-2 border-slate-100 pb-3 mb-6">
-                <div class="bg-blue-100 text-blue-700 p-2 rounded-lg">
+            <div class="flex items-center gap-3 border-b-2 border-slate-100 print:border-none print:pb-0 pb-3 mb-6 print:mb-3">
+                <div class="bg-blue-100 text-blue-700 p-2 rounded-lg print:hidden">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
-                <h3 class="text-lg md:text-xl font-bold text-slate-800">Daftar Nilai Rapor</h3>
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 print:hidden">Daftar Nilai Rapor</h3>
             </div>
             
-            <div class="overflow-x-auto w-full custom-scrollbar rounded-xl border border-slate-200">
-                <table class="w-full text-xs md:text-sm text-left border-collapse min-w-[650px] md:min-w-full">
-                    <thead class="bg-slate-100 text-slate-700 text-center font-semibold">
+            <!-- Tabel Nilai -->
+            <div class="overflow-x-auto w-full custom-scrollbar rounded-xl print:rounded-none border border-slate-200 print:border-none">
+                <table class="w-full text-xs md:text-sm text-left border-collapse min-w-[650px] print:min-w-full">
+                    <thead class="bg-slate-100 text-slate-700 print:text-black text-center font-semibold">
                         <tr>
                             <th rowspan="2" class="border-b border-r border-slate-200 p-2 md:p-3 w-10">No</th>
                             <th rowspan="2" class="border-b border-r border-slate-200 p-2 md:p-3 text-left">Mata Pelajaran</th>
@@ -179,6 +212,16 @@
                 </table>
             </div>
 
+            <!-- Area Tanda Tangan (Hanya muncul saat diprint) -->
+            <div class="hidden print:flex justify-end mt-10 print:mt-8">
+                <div class="text-center w-64 text-[11pt]">
+                    <p class="mb-1">Bandar Seikijang, <span id="tglCetak"></span></p>
+                    <p class="mb-20">Kepala Sekolah,</p>
+                    <p class="font-bold underline uppercase">Nama Kepala Sekolah, S.Pd</p> <!-- Ganti dengan nama kepsek yang sebenarnya -->
+                    <p>NIP. 19800101 200501 1 001</p> <!-- Ganti dengan NIP yang sebenarnya -->
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -193,11 +236,9 @@
         const GOOGLE_SHEET_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRCbe52w4cmXDnVCxfMW7r-fjYYBN24jStuVd9RtdMmu1R3OXaKVA68PU1XI7j_6p7mUjqCTtxN5UKF/pub?gid=0&single=true&output=tsv";
         
         // Pemetaan struktur tabel berdasarkan file TSV
-        // Kolom di TSV (Dimulai dari index 0):
-        // 1=NIS, 2=NISN, 3=NAMA, 4=TTL, 5=JENKEL, 6=KELAS, 7=ALAMAT
         const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7 };
 
-        // Pemetaan indeks nilai tiap mata pelajaran [Kls7Smt1, Kls7Smt2, Kls8Smt1, Kls8Smt2, Kls9Smt1]
+        // Pemetaan indeks nilai tiap mata pelajaran
         const SUBJECTS = [
             { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 19, 30, 41, 52] },
             { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 20, 31, 42, 53] },
@@ -213,23 +254,29 @@
         ];
 
         // Indeks untuk nilai Rata-Rata per Semester 
-        // Diambil dari kolom BL (63), BM (64), BN (65), BO (66), BP (67)
         const AVG_INDICES = [63, 64, 65, 66, 67];
 
-        let databaseCache = null; // Menyimpan data agar tidak perlu download berulang kali
+        let databaseCache = null;
 
-        // Fungsi untuk membersihkan dan parsing TSV text menjadi Array 2D
+        // Fungsi Set Tanggal Cetak Otomatis
+        function setTanggalCetak() {
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('tglCetak').textContent = today.toLocaleDateString('id-ID', options);
+        }
+        
+        // Panggil fungsi saat web dimuat
+        setTanggalCetak();
+
         function parseTSV(tsvText) {
             const rows = tsvText.split('\n');
             return rows.map(row => row.split('\t').map(col => col.trim()));
         }
 
-        // Fungsi kontrol Modal Warning
         function showModal(message) {
             document.getElementById('modalMessage').textContent = message;
             const modal = document.getElementById('warningModal');
             modal.classList.remove('hidden');
-            // Sedikit delay untuk efek transisi
             setTimeout(() => {
                 modal.firstElementChild.classList.remove('scale-95', 'opacity-0');
             }, 10);
@@ -248,7 +295,6 @@
             const resultArea = document.getElementById('resultArea');
             const errorMsg = document.getElementById('errorMsg');
 
-            // Validasi Input
             if (!nisn) {
                 showModal("Silakan masukkan NISN terlebih dahulu!");
                 return;
@@ -258,14 +304,12 @@
                 return;
             }
 
-            // Reset tampilan
             loading.classList.remove('hidden');
             loading.classList.add('flex');
             errorBox.classList.add('hidden');
             resultArea.classList.add('hidden');
 
             try {
-                // Fetch data hanya jika cache kosong
                 if (!databaseCache) {
                     const response = await fetch(GOOGLE_SHEET_TSV_URL);
                     if (!response.ok) throw new Error("Gagal mengambil data dari Google Sheets.");
@@ -273,7 +317,6 @@
                     databaseCache = parseTSV(textData);
                 }
 
-                // Cari baris yang NISN-nya cocok (index ke-2)
                 const studentRow = databaseCache.find(row => row[INFO_MAP.nisn] === nisn);
 
                 if (studentRow) {
@@ -294,14 +337,12 @@
             }
         }
 
-        // Fungsi Reset untuk mengosongkan layar dan input
         function resetData() {
             document.getElementById('nisnInput').value = '';
             document.getElementById('resultArea').classList.add('hidden');
             document.getElementById('errorBox').classList.add('hidden');
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('loading').classList.remove('flex');
-            // Kembalikan fokus kursor ke input box
             document.getElementById('nisnInput').focus();
         }
 
@@ -317,21 +358,19 @@
 
             // Isi Tabel Nilai
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = ''; // Kosongkan tabel sebelumnya
+            tbody.innerHTML = ''; 
 
-            // Looping ke 11 Mata Pelajaran secara berurutan
             SUBJECTS.forEach((subject, index) => {
                 const tr = document.createElement('tr');
+                // Kelas hover hanya untuk tampilan web, print color akan transparan berkat CSS
                 tr.className = index % 2 === 0 ? 'bg-white hover:bg-slate-50 transition-colors' : 'bg-slate-50/50 hover:bg-slate-50 transition-colors';
                 
-                // Ambil nilai berdasarkan index kolom di TSV (diisi '-' jika nilai kosong/tidak ada)
                 const v71 = row[subject.indices[0]] || '-';
                 const v72 = row[subject.indices[1]] || '-';
                 const v81 = row[subject.indices[2]] || '-';
                 const v82 = row[subject.indices[3]] || '-';
                 const v91 = row[subject.indices[4]] || '-';
 
-                // Kolom di baris tabel
                 tr.innerHTML = `
                     <td class="border-b border-r border-slate-200 p-2 md:p-3 text-slate-500">${index + 1}</td>
                     <td class="border-b border-r border-slate-200 p-2 md:p-3 text-left font-semibold text-slate-700">${subject.nama}</td>
@@ -344,20 +383,15 @@
                 tbody.appendChild(tr);
             });
 
-            // ==========================================
-            // Menambahkan Baris RATA-RATA NILAI di bawah
-            // ==========================================
             const trAvg = document.createElement('tr');
             trAvg.className = 'bg-blue-50 font-bold text-blue-800 border-t-2 border-blue-200'; 
             
-            // Ambil data rata-rata masing-masing semester
             const avg71 = row[AVG_INDICES[0]] || '-';
             const avg72 = row[AVG_INDICES[1]] || '-';
             const avg81 = row[AVG_INDICES[2]] || '-';
             const avg82 = row[AVG_INDICES[3]] || '-';
             const avg91 = row[AVG_INDICES[4]] || '-';
 
-            // Colspan=2 menggabungkan kolom 'No' dan 'Mata Pelajaran'
             trAvg.innerHTML = `
                 <td class="p-3 md:p-4 text-right uppercase tracking-wider text-sm border-r border-slate-200" colspan="2">Rata-Rata Nilai</td>
                 <td class="p-3 md:p-4 border-r border-slate-200">${avg71}</td>
