@@ -1,1 +1,247 @@
-ini adalah laman pertama
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Nilai SKNR - Surat Keterangan Nilai Rapor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Styling khusus untuk saat dicetak (Ctrl+P) */
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .print-area { width: 100%; box-shadow: none; border: none; padding: 0; }
+            th, td { border: 1px solid #000 !important; color: #000 !important; }
+            .kop-surat { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 3px solid black; padding-bottom: 10px;}
+        }
+        .kop-surat { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header Aplikasi (Tidak ikut di-print) -->
+    <header class="bg-blue-700 text-white p-4 shadow-md no-print">
+        <div class="container mx-auto max-w-5xl flex items-center justify-between">
+            <h1 class="text-xl md:text-2xl font-bold"><i class="fas fa-graduation-cap mr-2"></i> Sistem Cek SKNR</h1>
+        </div>
+    </header>
+
+    <main class="container mx-auto max-w-5xl p-4 flex-grow">
+        
+        <!-- Form Pencarian (Tidak ikut di-print) -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 no-print">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Pencarian Siswa</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="nisnInput" placeholder="Masukkan NISN Siswa..." 
+                    class="flex-grow border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onkeypress="if(event.key === 'Enter') cariData()">
+                <button onclick="cariData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition duration-200">
+                    <i class="fas fa-search mr-1"></i> Cari Data
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">Pastikan NISN yang dimasukkan benar (Contoh: 106576830).</p>
+        </div>
+
+        <!-- Status Loading & Error -->
+        <div id="loading" class="hidden text-center py-8 no-print">
+            <i class="fas fa-circle-notch fa-spin text-4xl text-blue-600 mb-2"></i>
+            <p class="text-gray-600">Mengambil data dari server...</p>
+        </div>
+        <div id="errorBox" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded no-print">
+            <p id="errorMsg" class="font-medium">Data tidak ditemukan.</p>
+        </div>
+
+        <!-- Area Hasil yang akan ditampilkan & dicetak -->
+        <div id="resultArea" class="hidden bg-white rounded-lg shadow-md p-8 print-area relative">
+            
+            <!-- Tombol Cetak -->
+            <button onclick="window.print()" class="absolute top-4 right-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition duration-200 no-print">
+                <i class="fas fa-print mr-1"></i> Cetak SKNR
+            </button>
+
+            <!-- Kop Surat (Hanya muncul saat diprint) -->
+            <div class="kop-surat hidden">
+                <h2 style="font-size: 24px; font-weight: bold; margin: 0;">SURAT KETERANGAN NILAI RAPOR (SKNR)</h2>
+                <p style="margin: 5px 0 0 0;">Tahun Pelajaran 2025/2026</p>
+            </div>
+
+            <h3 class="text-xl font-bold border-b pb-2 mb-4 text-center md:text-left">Biodata Siswa</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8 mb-8 text-sm md:text-base">
+                <div class="flex"><span class="w-32 font-semibold">NIS</span><span class="mr-2">:</span><span id="resNis" class="font-medium">-</span></div>
+                <div class="flex"><span class="w-32 font-semibold">NISN</span><span class="mr-2">:</span><span id="resNisn" class="font-medium">-</span></div>
+                <div class="flex"><span class="w-32 font-semibold">Nama Lengkap</span><span class="mr-2">:</span><span id="resNama" class="font-medium uppercase">-</span></div>
+                <div class="flex"><span class="w-32 font-semibold">Tempat, Tgl Lahir</span><span class="mr-2">:</span><span id="resTtl">-</span></div>
+                <div class="flex"><span class="w-32 font-semibold">Jenis Kelamin</span><span class="mr-2">:</span><span id="resJenkel">-</span></div>
+                <div class="flex"><span class="w-32 font-semibold">Kelas Terakhir</span><span class="mr-2">:</span><span id="resKelas">-</span></div>
+                <div class="flex md:col-span-2"><span class="w-32 md:w-32 font-semibold flex-shrink-0">Alamat</span><span class="mr-2">:</span><span id="resAlamat">-</span></div>
+            </div>
+
+            <h3 class="text-xl font-bold border-b pb-2 mb-4 text-center md:text-left">Daftar Nilai Rapor</h3>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left border-collapse border border-gray-300">
+                    <thead class="bg-gray-100 text-gray-700 text-center">
+                        <tr>
+                            <th rowspan="2" class="border border-gray-300 p-2 w-10">No</th>
+                            <th rowspan="2" class="border border-gray-300 p-2 text-left">Mata Pelajaran</th>
+                            <th colspan="2" class="border border-gray-300 p-2">Kelas VII</th>
+                            <th colspan="2" class="border border-gray-300 p-2">Kelas VIII</th>
+                            <th colspan="1" class="border border-gray-300 p-2">Kelas IX</th>
+                        </tr>
+                        <tr>
+                            <th class="border border-gray-300 p-2 w-16">Smt 1</th>
+                            <th class="border border-gray-300 p-2 w-16">Smt 2</th>
+                            <th class="border border-gray-300 p-2 w-16">Smt 1</th>
+                            <th class="border border-gray-300 p-2 w-16">Smt 2</th>
+                            <th class="border border-gray-300 p-2 w-16">Smt 1</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="text-center">
+                        <!-- Baris nilai akan di-generate oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 text-center p-4 mt-auto no-print">
+        <p>&copy; 2026 - Sistem Informasi Akademik Sekolah</p>
+    </footer>
+
+    <script>
+        // =========================================================================
+        // PENTING: GANTI URL DI BAWAH INI DENGAN URL GOOGLE SHEETS PUBLISH (TSV) ANDA
+        // =========================================================================
+        const GOOGLE_SHEET_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRCbe52w4cmXDnVCxfMW7r-fjYYBN24jStuVd9RtdMmu1R3OXaKVA68PU1XI7j_6p7mUjqCTtxN5UKF/pub?gid=0&single=true&output=tsv";
+        
+        // Pemetaan struktur tabel berdasarkan file TSV yang dilampirkan
+        // Kolom di TSV (Dimulai dari index 0):
+        // 1=NIS, 2=NISN, 3=NAMA, 4=TTL, 5=JENKEL, 6=KELAS, 7=ALAMAT
+        const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7 };
+
+        // Pemetaan indeks nilai tiap mata pelajaran [Kls7Smt1, Kls7Smt2, Kls8Smt1, Kls8Smt2, Kls9Smt1]
+        const SUBJECTS = [
+            { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 19, 30, 41, 52] },
+            { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 20, 31, 42, 53] },
+            { nama: "Bahasa Indonesia (BI)", indices: [10, 21, 32, 43, 54] },
+            { nama: "Bahasa Inggris (B.ING)", indices: [11, 22, 33, 44, 55] },
+            { nama: "Matematika (MTK)", indices: [12, 23, 34, 45, 56] },
+            { nama: "Ilmu Pengetahuan Alam (IPA)", indices: [13, 24, 35, 46, 57] },
+            { nama: "Ilmu Pengetahuan Sosial (IPS)", indices: [14, 25, 36, 47, 58] },
+            { nama: "Seni Budaya (SB)", indices: [15, 26, 37, 48, 59] },
+            { nama: "Informatika (INK)", indices: [16, 27, 38, 49, 60] },
+            { nama: "Pendidikan Jasmani Olahraga Kesehatan (Penjas)", indices: [17, 28, 39, 50, 61] },
+            { nama: "Budaya Melayu Riau (BMR)", indices: [18, 29, 40, 51, 62] }
+        ];
+
+        let databaseCache = null; // Menyimpan data agar tidak perlu download berulang kali
+
+        // Fungsi untuk membersihkan dan parsing TSV text menjadi Array 2D
+        function parseTSV(tsvText) {
+            const rows = tsvText.split('\n');
+            return rows.map(row => row.split('\t').map(col => col.trim()));
+        }
+
+        async function cariData() {
+            const nisn = document.getElementById('nisnInput').value.trim();
+            const loading = document.getElementById('loading');
+            const errorBox = document.getElementById('errorBox');
+            const resultArea = document.getElementById('resultArea');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (!nisn) {
+                alert("Silakan masukkan NISN terlebih dahulu!");
+                return;
+            }
+
+            // Reset tampilan
+            loading.classList.remove('hidden');
+            errorBox.classList.add('hidden');
+            resultArea.classList.add('hidden');
+
+            try {
+                // Fetch data hanya jika cache kosong
+                if (!databaseCache) {
+                    /* CATATAN UNTUK TESTING LOKAL:
+                        Jika Anda menjalankan ini di komputer tanpa URL valid, ia akan gagal.
+                        Untuk demonstrasi, jika URL belum diganti, kita akan buat dummy data 
+                        berdasarkan data RIRIN ANDRIANI dari file TSV Anda.
+                    */
+                    if(GOOGLE_SHEET_TSV_URL.includes("GANTI_DENGAN_ID_SHEET_ANDA")) {
+                        console.warn("Menggunakan data dummy karena URL Sheet belum diatur.");
+                        // Dummy data row 141 (Ririn Andriani) + Header
+                        databaseCache = [
+                            [], [], // Row 0 & 1 (Header 1 & 2)
+                            ["141", "4719", "106540182", "RIRIN ANDRIANI", "Pangkalan Baru,14 Juni 2010", "Perempuan", "9.5", "", "79", "83", "81", "75", "80", "86", "77", "85", "83", "80", "83", "88", "85", "86", "69", "65", "83", "80", "86", "80", "92", "81", "82", "85", "88", "83", "83", "78", "83", "84", "79", "80", "80", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+                        ];
+                    } else {
+                        const response = await fetch(GOOGLE_SHEET_TSV_URL);
+                        if (!response.ok) throw new Error("Gagal mengambil data dari Google Sheets.");
+                        const textData = await response.text();
+                        databaseCache = parseTSV(textData);
+                    }
+                }
+
+                // Cari baris yang NISN-nya cocok (index ke-2)
+                const studentRow = databaseCache.find(row => row[INFO_MAP.nisn] === nisn);
+
+                if (studentRow) {
+                    tampilkanData(studentRow);
+                    resultArea.classList.remove('hidden');
+                } else {
+                    errorMsg.textContent = `Siswa dengan NISN ${nisn} tidak ditemukan.`;
+                    errorBox.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                errorMsg.textContent = "Terjadi kesalahan jaringan atau konfigurasi URL Google Sheets salah.";
+                console.error(error);
+                errorBox.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function tampilkanData(row) {
+            // Isi Biodata
+            document.getElementById('resNis').textContent = row[INFO_MAP.nis] || '-';
+            document.getElementById('resNisn').textContent = row[INFO_MAP.nisn] || '-';
+            document.getElementById('resNama').textContent = row[INFO_MAP.nama] || '-';
+            document.getElementById('resTtl').textContent = row[INFO_MAP.ttl] || '-';
+            document.getElementById('resJenkel').textContent = row[INFO_MAP.jenkel] || '-';
+            document.getElementById('resKelas').textContent = row[INFO_MAP.kelas] || '-';
+            document.getElementById('resAlamat').textContent = row[INFO_MAP.alamat] || '-';
+
+            // Isi Tabel Nilai
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ''; // Kosongkan tabel sebelumnya
+
+            SUBJECTS.forEach((subject, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                
+                // Ambil nilai berdasarkan index kolom di TSV, kosongkan jika tidak ada
+                const v71 = row[subject.indices[0]] || '-';
+                const v72 = row[subject.indices[1]] || '-';
+                const v81 = row[subject.indices[2]] || '-';
+                const v82 = row[subject.indices[3]] || '-';
+                const v91 = row[subject.indices[4]] || '-';
+
+                tr.innerHTML = `
+                    <td class="border border-gray-300 p-2">${index + 1}</td>
+                    <td class="border border-gray-300 p-2 text-left font-medium text-gray-800">${subject.nama}</td>
+                    <td class="border border-gray-300 p-2">${v71}</td>
+                    <td class="border border-gray-300 p-2">${v72}</td>
+                    <td class="border border-gray-300 p-2">${v81}</td>
+                    <td class="border border-gray-300 p-2">${v82}</td>
+                    <td class="border border-gray-300 p-2">${v91}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
