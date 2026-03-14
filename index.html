@@ -30,6 +30,22 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
 
+    <!-- Modal Warning (Hidden by default) -->
+    <div id="warningModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50 no-print">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 transform transition-all">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Peringatan</h3>
+                <p id="modalMessage" class="text-sm text-gray-500 mb-6"></p>
+                <button onclick="closeModal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition duration-200">
+                    Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header Aplikasi (Tidak ikut di-print) -->
     <header class="bg-blue-700 text-white p-4 shadow-md no-print">
         <div class="container mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between text-center md:text-left">
@@ -143,24 +159,23 @@
         const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7 };
 
         // Pemetaan indeks nilai tiap mata pelajaran [Kls7Smt1, Kls7Smt2, Kls8Smt1, Kls8Smt2, Kls9Smt1]
-        // Di-update: Kolom rata-rata menyisip di antara tiap semester, sehingga indeks bergeser.
         const SUBJECTS = [
-            { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 20, 32, 44, 56] },
-            { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 21, 33, 45, 57] },
-            { nama: "Bahasa Indonesia (BI)", indices: [10, 22, 34, 46, 58] },
-            { nama: "Bahasa Inggris (B.ING)", indices: [11, 23, 35, 47, 59] },
-            { nama: "Matematika (MTK)", indices: [12, 24, 36, 48, 60] },
-            { nama: "Ilmu Pengetahuan Alam (IPA)", indices: [13, 25, 37, 49, 61] },
-            { nama: "Ilmu Pengetahuan Sosial (IPS)", indices: [14, 26, 38, 50, 62] },
-            { nama: "Seni Budaya (SB)", indices: [15, 27, 39, 51, 63] },
-            { nama: "Informatika (INK)", indices: [16, 28, 40, 52, 64] },
-            { nama: "Pendidikan Jasmani Olahraga Kesehatan (Penjas)", indices: [17, 29, 41, 53, 65] },
-            { nama: "Budaya Melayu Riau (BMR)", indices: [18, 30, 42, 54, 66] }
+            { nama: "Pendidikan Agama dan Budi Pekerti", indices: [8, 19, 30, 41, 52] },
+            { nama: "Pendidikan Pancasila dan Kewarganegaraan", indices: [9, 20, 31, 42, 53] },
+            { nama: "Bahasa Indonesia (BI)", indices: [10, 21, 32, 43, 54] },
+            { nama: "Bahasa Inggris (B.ING)", indices: [11, 22, 33, 44, 55] },
+            { nama: "Matematika (MTK)", indices: [12, 23, 34, 45, 56] },
+            { nama: "Ilmu Pengetahuan Alam (IPA)", indices: [13, 24, 35, 46, 57] },
+            { nama: "Ilmu Pengetahuan Sosial (IPS)", indices: [14, 25, 36, 47, 58] },
+            { nama: "Seni Budaya (SB)", indices: [15, 26, 37, 48, 59] },
+            { nama: "Informatika (INK)", indices: [16, 27, 38, 49, 60] },
+            { nama: "Pendidikan Jasmani Olahraga Kesehatan (Penjas)", indices: [17, 28, 39, 50, 61] },
+            { nama: "Budaya Melayu Riau (BMR)", indices: [18, 29, 40, 51, 62] }
         ];
 
         // Indeks untuk nilai Rata-Rata per Semester 
-        // Terletak tepat setelah nilai BMR masing-masing semester
-        const AVG_INDICES = [19, 31, 43, 55, 67];
+        // Diambil dari kolom BL (63), BM (64), BN (65), BO (66), BP (67)
+        const AVG_INDICES = [63, 64, 65, 66, 67];
 
         let databaseCache = null; // Menyimpan data agar tidak perlu download berulang kali
 
@@ -168,6 +183,17 @@
         function parseTSV(tsvText) {
             const rows = tsvText.split('\n');
             return rows.map(row => row.split('\t').map(col => col.trim()));
+        }
+
+        // Fungsi kontrol Modal Warning
+        function showModal(message) {
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('warningModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('warningModal').classList.add('hidden');
+            document.getElementById('nisnInput').focus();
         }
 
         async function cariData() {
@@ -179,11 +205,11 @@
 
             // Validasi Input
             if (!nisn) {
-                alert("Silakan masukkan NISN terlebih dahulu!");
+                showModal("Silakan masukkan NISN terlebih dahulu!");
                 return;
             }
             if (nisn.length < 10) {
-                alert("NISN tidak valid! Pastikan Anda memasukkan tepat 10 digit angka.");
+                showModal("NISN tidak valid! Pastikan Anda memasukkan tepat 10 digit angka.");
                 return;
             }
 
