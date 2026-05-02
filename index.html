@@ -64,6 +64,23 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        /* ========================================================= */
+        /* CSS Untuk Memaksa Layar Menjadi Landscape di Mobile       */
+        /* ========================================================= */
+        @media screen and (max-width: 768px) and (orientation: portrait) {
+            body.is-landscape-forced {
+                transform: rotate(-90deg);
+                transform-origin: top left;
+                width: 100vh !important;
+                height: 100vw !important;
+                position: fixed;
+                top: 100vh;
+                left: 0;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-gray-800 font-sans min-h-screen flex flex-col selection:bg-blue-200">
@@ -102,7 +119,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 no-print max-w-3xl mx-auto transition-shadow hover:shadow-md">
             <div class="text-center md:text-left mb-6">
                 <h2 class="text-xl font-bold text-slate-800">Pencarian Data Siswa</h2>
-                <p class="text-sm text-slate-500 mt-1">Masukkan 10 digit NISN untuk melihat Surat Keterangan Nilai Rata- Rata Rapor.</p>
+                <p class="text-sm text-slate-500 mt-1">Masukkan 10 digit NISN untuk melihat Surat Keterangan Nilai Rapor.</p>
             </div>
             
             <div class="flex flex-col sm:flex-row gap-3">
@@ -158,7 +175,7 @@
 
             <!-- Judul Surat Print -->
             <div class="hidden print:block text-center mb-6">
-                <h3 class="text-lg font-bold uppercase underline mb-1">Surat Keterangan Nilai Rata-rata Rapor </h3>
+                <h3 class="text-lg font-bold uppercase underline mb-1">Surat Keterangan Nilai Rapor (SKNR)</h3>
                 <p class="text-sm">Tahun Pelajaran 2025/2026</p>
             </div>
 
@@ -323,6 +340,25 @@
                 if (studentRow) {
                     tampilkanData(studentRow);
                     resultArea.classList.remove('hidden');
+                    
+                    // ========================================================
+                    // Trigger Landscape Mode Jika Berada di Perangkat HP
+                    // ========================================================
+                    if (window.innerWidth <= 768) {
+                        // 1. Tambahkan class CSS pemutar visual
+                        document.body.classList.add('is-landscape-forced');
+                        
+                        // 2. Opsi: Coba Native API Orientasi jika didukung Browser
+                        try {
+                            if (screen.orientation && screen.orientation.lock) {
+                                screen.orientation.lock('landscape').catch(e => {
+                                    // Error ini normal jika browser minta syarat fullscreen lebih dulu
+                                    console.log('Native screen lock require fullscreen or unsupported:', e);
+                                });
+                            }
+                        } catch (e) {}
+                    }
+                    
                 } else {
                     errorMsg.textContent = `Siswa dengan NISN ${nisn} tidak ditemukan.`;
                     errorBox.classList.remove('hidden');
@@ -345,6 +381,16 @@
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('loading').classList.remove('flex');
             document.getElementById('nisnInput').focus();
+            
+            // ========================================================
+            // Kembalikan Layar ke Normal (Portrait) Saat Reset
+            // ========================================================
+            document.body.classList.remove('is-landscape-forced');
+            try {
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            } catch (e) {}
         }
 
         function tampilkanData(row) {
