@@ -177,6 +177,7 @@
                 <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Tempat, Tgl Lahir</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resTtl" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
                 <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Jenis Kelamin</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resJenkel" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
                 <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Kelas Terakhir</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resKelas" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
+                <div class="flex"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Urut</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resUrut" class="font-bold print:font-normal text-blue-700 print:text-black">-</span></div>
                 <div class="flex md:col-span-2 print:col-span-2"><span class="w-32 print:w-28 text-slate-500 print:text-black font-medium flex-shrink-0">Alamat</span><span class="mr-2 text-slate-400 print:text-black">:</span><span id="resAlamat" class="font-medium print:font-normal text-slate-800 print:text-black">-</span></div>
             </div>
 
@@ -236,7 +237,7 @@
         const GOOGLE_SHEET_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRCbe52w4cmXDnVCxfMW7r-fjYYBN24jStuVd9RtdMmu1R3OXaKVA68PU1XI7j_6p7mUjqCTtxN5UKF/pub?gid=0&single=true&output=tsv";
         
         // Pemetaan struktur tabel berdasarkan file TSV
-        const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7 };
+        const INFO_MAP = { nis: 1, nisn: 2, nama: 3, ttl: 4, jenkel: 5, kelas: 6, alamat: 7, urut: 69 };
 
         // Pemetaan indeks nilai tiap mata pelajaran
         const SUBJECTS = [
@@ -354,6 +355,10 @@
             document.getElementById('resTtl').textContent = row[INFO_MAP.ttl] || '-';
             document.getElementById('resJenkel').textContent = row[INFO_MAP.jenkel] || '-';
             document.getElementById('resKelas').textContent = row[INFO_MAP.kelas] || '-';
+            
+            const valUrut = row[INFO_MAP.urut];
+            document.getElementById('resUrut').textContent = valUrut ? `${valUrut}/148` : '-';
+            
             document.getElementById('resAlamat').textContent = row[INFO_MAP.alamat] || '-';
 
             // Isi Tabel Nilai
