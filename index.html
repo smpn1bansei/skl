@@ -68,17 +68,24 @@
         /* ========================================================= */
         /* CSS Untuk Memaksa Layar Menjadi Landscape di Mobile       */
         /* ========================================================= */
+        html.is-landscape-forced {
+            overflow: hidden !important;
+            width: 100vw;
+            height: 100vh;
+        }
+
         @media screen and (max-width: 768px) and (orientation: portrait) {
             body.is-landscape-forced {
-                transform: rotate(-90deg);
+                transform: rotate(90deg);
                 transform-origin: top left;
                 width: 100vh !important;
                 height: 100vw !important;
                 position: fixed;
-                top: 100vh;
-                left: 0;
-                overflow-y: auto;
-                overflow-x: hidden;
+                top: 0;
+                left: 100%;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch; /* Penting untuk scroll lancar di iOS */
             }
         }
     </style>
@@ -345,15 +352,15 @@
                     // Trigger Landscape Mode Jika Berada di Perangkat HP
                     // ========================================================
                     if (window.innerWidth <= 768) {
-                        // 1. Tambahkan class CSS pemutar visual
+                        // 1. Tambahkan class CSS pemutar visual ke HTML dan Body
+                        document.documentElement.classList.add('is-landscape-forced');
                         document.body.classList.add('is-landscape-forced');
                         
                         // 2. Opsi: Coba Native API Orientasi jika didukung Browser
                         try {
                             if (screen.orientation && screen.orientation.lock) {
                                 screen.orientation.lock('landscape').catch(e => {
-                                    // Error ini normal jika browser minta syarat fullscreen lebih dulu
-                                    console.log('Native screen lock require fullscreen or unsupported:', e);
+                                    // Error normal pada browser tanpa fullscreen
                                 });
                             }
                         } catch (e) {}
@@ -385,6 +392,7 @@
             // ========================================================
             // Kembalikan Layar ke Normal (Portrait) Saat Reset
             // ========================================================
+            document.documentElement.classList.remove('is-landscape-forced');
             document.body.classList.remove('is-landscape-forced');
             try {
                 if (screen.orientation && screen.orientation.unlock) {
@@ -413,7 +421,6 @@
 
             SUBJECTS.forEach((subject, index) => {
                 const tr = document.createElement('tr');
-                // Kelas hover hanya untuk tampilan web, print color akan transparan berkat CSS
                 tr.className = index % 2 === 0 ? 'bg-white hover:bg-slate-50 transition-colors' : 'bg-slate-50/50 hover:bg-slate-50 transition-colors';
                 
                 const v71 = row[subject.indices[0]] || '-';
