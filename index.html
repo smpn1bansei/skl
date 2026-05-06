@@ -233,11 +233,18 @@
         <!-- RUANG DISKUSI (CHAT)                       -->
         <!-- ========================================== -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 no-print max-w-3xl mx-auto">
-            <div class="flex items-center gap-3 border-b-2 border-slate-100 pb-3 mb-6">
-                <div class="bg-red-100 text-red-700 p-2 rounded-lg">
-                    <i class="fas fa-comments"></i>
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="bg-red-100 text-red-700 p-2 rounded-lg">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800">Ruang Diskusi & Informasi</h3>
                 </div>
-                <h3 class="text-lg md:text-xl font-bold text-slate-800">Ruang Diskusi & Informasi</h3>
+                
+                <!-- Tombol Refresh Obrolan -->
+                <button onclick="loadChat()" class="text-slate-500 hover:text-red-600 transition-colors px-3 py-2 text-sm flex items-center gap-2 bg-slate-100 hover:bg-red-50 rounded-lg active:scale-95" title="Segarkan Obrolan">
+                    <i class="fas fa-sync-alt" id="refreshIcon"></i> <span class="hidden sm:inline font-medium">Segarkan</span>
+                </button>
             </div>
 
             <!-- Area Tampil Pesan -->
@@ -309,8 +316,15 @@
         // =========================================================================
         async function loadChat() {
             const chatBox = document.getElementById('chatBox');
+            const refreshIcon = document.getElementById('refreshIcon');
+            
+            // Tambahkan animasi berputar saat proses refresh
+            if(refreshIcon) refreshIcon.classList.add('fa-spin');
+            
             try {
-                const response = await fetch(CHAT_API_URL);
+                // Tambahkan parameter penangkal cache agar selalu mengambil data terbaru
+                const cacheBusterUrl = `${CHAT_API_URL}?t=${new Date().getTime()}`;
+                const response = await fetch(cacheBusterUrl);
                 const data = await response.json(); 
                 
                 chatBox.innerHTML = ''; // Kosongkan tampilan awal loading
@@ -351,7 +365,13 @@
 
             } catch (err) {
                 console.error("Gagal memuat chat: ", err);
-                chatBox.innerHTML = '<div class="text-center text-red-500 text-sm py-8">Gagal memuat diskusi. Pastikan koneksi internet stabil.</div>';
+                // Hanya tampilkan pesan error jika belum ada isi obrolan sebelumnya
+                if(chatBox.innerHTML === '') {
+                    chatBox.innerHTML = '<div class="text-center text-red-500 text-sm py-8">Gagal memuat diskusi. Pastikan koneksi internet stabil.</div>';
+                }
+            } finally {
+                // Hentikan animasi berputar
+                if(refreshIcon) refreshIcon.classList.remove('fa-spin');
             }
         }
 
