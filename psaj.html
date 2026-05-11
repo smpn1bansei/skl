@@ -114,7 +114,6 @@
                         <thead>
                             <tr class="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
                                 <th class="p-4 border-b font-semibold text-center w-12">No</th>
-                                <th class="p-4 border-b font-semibold w-24">NIS</th>
                                 <th class="p-4 border-b font-semibold min-w-[200px]">Nama Siswa</th>
                                 <th class="p-4 border-b font-semibold w-32 bg-blue-100/50 text-center">Nilai</th>
                             </tr>
@@ -199,7 +198,6 @@
                             tr.className = "hover:bg-blue-50/30 transition-colors";
                             tr.innerHTML = `
                                 <td class="p-4 text-center text-gray-500 font-medium">${index + 1}</td>
-                                <td class="p-4 font-mono text-sm text-gray-600">${siswa.nis}</td>
                                 <td class="p-4 font-medium text-gray-800">${siswa.nama}</td>
                                 <td class="p-4 bg-blue-50/30">
                                     <input type="number" step="0.01" min="0" max="100" 
@@ -236,17 +234,26 @@
             
             // Kumpulkan data (Baris Excel & Nilai)
             const payloadData = [];
+            let hitungDiabaikan = 0;
+
             inputs.forEach(input => {
-                if(input.value.trim() !== '') { // Hanya kirim yang ada isinya
+                const nilaiRaw = input.value.trim();
+                
+                // MENCEGAH BENTROK: Hanya kirim ke Spreadsheet jika:
+                // 1. Kolom tidak kosong ("")
+                // 2. Kolom tidak bernilai 0
+                if(nilaiRaw !== '' && parseFloat(nilaiRaw) !== 0) { 
                     payloadData.push({
                         row: input.getAttribute('data-row'),
-                        nilai: parseFloat(input.value)
+                        nilai: parseFloat(nilaiRaw)
                     });
+                } else {
+                    hitungDiabaikan++; // Hitung berapa baris kosong yang aman (tidak dikirim)
                 }
             });
 
             if(payloadData.length === 0) {
-                Swal.fire('Kosong', 'Belum ada nilai yang diinputkan.', 'info');
+                Swal.fire('Kosong', 'Belum ada nilai baru yang diinputkan (sel kosong atau bernilai 0 akan diabaikan).', 'info');
                 return;
             }
 
@@ -267,7 +274,6 @@
 
             try {
                 // Kirim request POST. 
-                // Menggunakan URLSearchParams agar terhindar dari pemblokiran CORS oleh Google Apps Script
                 const response = await fetch(scriptURL, { 
                     method: 'POST', 
                     body: new URLSearchParams({ payload: JSON.stringify(payload) })
@@ -276,9 +282,14 @@
                 const res = await response.json();
                 
                 if(res.result === 'success') {
+                    let pesanSukses = `${payloadData.length} data nilai berhasil disimpan ke Spreadsheet.`;
+                    if (hitungDiabaikan > 0) {
+                        pesanSukses += ` (${hitungDiabaikan} baris kosong/nol diabaikan agar aman).`;
+                    }
+                    
                     Swal.fire({
                         title: 'Berhasil!',
-                        text: `${payloadData.length} data nilai berhasil disimpan ke Spreadsheet.`,
+                        text: pesanSukses,
                         icon: 'success',
                         confirmButtonColor: '#16a34a'
                     });
