@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Nilai PSAJ Kelas IX</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- SweetAlert2 untuk Notifikasi -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        /* Sembunyikan panah up/down pada input type number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800 pb-12">
+
+    <!-- Header -->
+    <header class="bg-blue-700 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-6 flex items-center gap-4">
+            <i class="ph-fill ph-chalkboard-teacher text-4xl"></i>
+            <div>
+                <h1 class="text-2xl font-bold">Portal Guru - Input Nilai PSAJ</h1>
+                <p class="text-blue-200 text-sm">Sumatif Akhir Jenjang Kelas IX</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        
+        <!-- Peringatan Setup URL -->
+        <div id="setupWarning" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md hidden shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="ph-fill ph-warning-circle text-yellow-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700 font-medium">
+                        URL Web App Google Apps Script belum diatur. Silakan edit file HTML ini dan masukkan URL pada variabel <code class="bg-yellow-100 px-1 rounded">scriptURL</code>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Filter Kelas & Mapel -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-2">
+                <i class="ph-bold ph-funnel text-blue-600 text-xl"></i>
+                <h2 class="text-lg font-semibold text-gray-800">Pilih Kelas & Mata Pelajaran</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="pilihKelas" class="block text-sm font-medium text-gray-700 mb-1">Pilih Kelas</label>
+                        <select id="pilihKelas" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white font-medium cursor-pointer">
+                            <option value="">-- Pilih Kelas --</option>
+                            <option value="9.1">Kelas 9.1</option>
+                            <option value="9.2">Kelas 9.2</option>
+                            <option value="9.3">Kelas 9.3</option>
+                            <option value="9.4">Kelas 9.4</option>
+                            <option value="9.5">Kelas 9.5</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="pilihMapel" class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
+                        <select id="pilihMapel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white font-medium cursor-pointer">
+                            <option value="">-- Pilih Mata Pelajaran --</option>
+                            <option value="agama">Pendidikan Agama</option>
+                            <option value="pkn">PKN</option>
+                            <option value="bindo">Bahasa Indonesia</option>
+                            <option value="mtk">Matematika</option>
+                            <option value="ipa">Ilmu Pengetahuan Alam (IPA)</option>
+                            <option value="ips">Ilmu Pengetahuan Sosial (IPS)</option>
+                            <option value="bing">Bahasa Inggris</option>
+                            <option value="senbud">Seni Budaya</option>
+                            <option value="pjok">PJOK</option>
+                            <option value="bmr">Budaya Melayu Riau (BMR)</option>
+                            <option value="ink">Informatika / INK</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="button" id="btnTampil" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 shadow-md">
+                    <i class="ph-bold ph-magnifying-glass text-lg"></i>
+                    <span id="textTampil">Tampilkan Form Input Nilai</span>
+                    <i id="spinnerTampil" class="ph-bold ph-spinner animate-spin text-lg hidden"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section: Tabel Input Nilai -->
+        <div id="sectionInput" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hidden transition-all duration-300">
+            <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="ph-bold ph-users text-blue-600 text-xl"></i>
+                    <h2 class="text-lg font-bold text-gray-800" id="judulTabel">Daftar Siswa</h2>
+                </div>
+                <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold" id="badgeCount">0 Siswa</span>
+            </div>
+            
+            <form id="formNilai" class="p-0">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
+                                <th class="p-4 border-b font-semibold text-center w-12">No</th>
+                                <th class="p-4 border-b font-semibold w-24">NIS</th>
+                                <th class="p-4 border-b font-semibold min-w-[200px]">Nama Siswa</th>
+                                <th class="p-4 border-b font-semibold w-32 bg-blue-100/50 text-center">Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodySiswa" class="divide-y divide-gray-200">
+                            <!-- Baris siswa akan di-render di sini oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-6 bg-gray-50 border-t border-gray-200 flex justify-end">
+                    <button type="submit" id="btnSimpan" class="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold flex items-center gap-2 shadow-md hover:shadow-lg focus:ring-4 focus:ring-green-300">
+                        <i class="ph-bold ph-check-circle text-xl"></i>
+                        <span id="textSimpan">Simpan Semua Nilai</span>
+                        <i id="spinnerSimpan" class="ph-bold ph-spinner animate-spin text-lg hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <script>
+        // =========================================================================
+        // PENTING: Ganti URL di bawah dengan URL Web App Google Apps Script Anda!
+        // =========================================================================
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwBuK8E8TBJJfciCHZEibqueoBQ8-W7jF9t8hWUDWKL5bZLnsH-dosC_JlHR27ALRAGXA/exec';
+        
+        const setupWarning = document.getElementById('setupWarning');
+        const btnTampil = document.getElementById('btnTampil');
+        const btnSimpan = document.getElementById('btnSimpan');
+        const sectionInput = document.getElementById('sectionInput');
+        const tbodySiswa = document.getElementById('tbodySiswa');
+
+        // Cek URL 
+        if(scriptURL === 'MASUKKAN_URL_WEB_APP_GOOGLE_APPS_SCRIPT_DISINI' || scriptURL.trim() === '') {
+            setupWarning.classList.remove('hidden');
+        }
+
+        // --- 1. TAMPILKAN DAFTAR SISWA ---
+        btnTampil.addEventListener('click', async () => {
+            const kelas = document.getElementById('pilihKelas').value;
+            const mapel = document.getElementById('pilihMapel').value;
+            const mapelText = document.getElementById('pilihMapel').options[document.getElementById('pilihMapel').selectedIndex].text;
+
+            if(!kelas || !mapel) {
+                Swal.fire('Perhatian', 'Harap pilih Kelas dan Mata Pelajaran terlebih dahulu.', 'warning');
+                return;
+            }
+
+            if(scriptURL === 'MASUKKAN_URL_WEB_APP_GOOGLE_APPS_SCRIPT_DISINI') {
+                Swal.fire('Error!', 'URL Apps Script belum diatur.', 'error'); return;
+            }
+
+            // Loading state UI
+            const textTampil = document.getElementById('textTampil');
+            const spinnerTampil = document.getElementById('spinnerTampil');
+            btnTampil.disabled = true;
+            textTampil.innerText = 'Mengambil Data Siswa...';
+            spinnerTampil.classList.remove('hidden');
+            sectionInput.classList.add('hidden'); // Sembunyikan tabel lama jika ada
+
+            try {
+                // Fetch data menggunakan GET Request
+                const response = await fetch(`${scriptURL}?action=getStudents&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}`);
+                const res = await response.json();
+
+                if(res.status === 'success') {
+                    if(res.data.length === 0) {
+                        Swal.fire('Data Kosong', `Tidak ditemukan data siswa untuk kelas ${kelas}. Pastikan penulisan kelas di Spreadsheet sesuai (misal: 9.1).`, 'info');
+                    } else {
+                        // Render Tabel
+                        document.getElementById('judulTabel').innerText = `Input Nilai ${mapelText} - Kelas ${kelas}`;
+                        document.getElementById('badgeCount').innerText = `${res.data.length} Siswa`;
+                        
+                        tbodySiswa.innerHTML = '';
+                        res.data.forEach((siswa, index) => {
+                            // Jika nilai = 0 atau belum ada, biarkan kosong agar bersih
+                            const nilaiTampil = (siswa.nilai !== '' && siswa.nilai !== null) ? siswa.nilai : '';
+                            
+                            const tr = document.createElement('tr');
+                            tr.className = "hover:bg-blue-50/30 transition-colors";
+                            tr.innerHTML = `
+                                <td class="p-4 text-center text-gray-500 font-medium">${index + 1}</td>
+                                <td class="p-4 font-mono text-sm text-gray-600">${siswa.nis}</td>
+                                <td class="p-4 font-medium text-gray-800">${siswa.nama}</td>
+                                <td class="p-4 bg-blue-50/30">
+                                    <input type="number" step="0.01" min="0" max="100" 
+                                           class="input-nilai w-full text-center px-2 py-2 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-blue-700 bg-white" 
+                                           data-row="${siswa.row}" 
+                                           value="${nilaiTampil}" 
+                                           placeholder="-">
+                                </td>
+                            `;
+                            tbodySiswa.appendChild(tr);
+                        });
+                        
+                        sectionInput.classList.remove('hidden');
+                    }
+                } else {
+                    throw new Error(res.error || 'Terjadi kesalahan sistem');
+                }
+            } catch (error) {
+                Swal.fire('Gagal!', 'Tidak dapat mengambil data dari Spreadsheet. ' + error.message, 'error');
+            } finally {
+                // Restore Button
+                btnTampil.disabled = false;
+                textTampil.innerText = 'Tampilkan Form Input Nilai';
+                spinnerTampil.classList.add('hidden');
+            }
+        });
+
+        // --- 2. SIMPAN SEMUA NILAI ---
+        document.getElementById('formNilai').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const mapel = document.getElementById('pilihMapel').value;
+            const inputs = document.querySelectorAll('.input-nilai');
+            
+            // Kumpulkan data (Baris Excel & Nilai)
+            const payloadData = [];
+            inputs.forEach(input => {
+                if(input.value.trim() !== '') { // Hanya kirim yang ada isinya
+                    payloadData.push({
+                        row: input.getAttribute('data-row'),
+                        nilai: parseFloat(input.value)
+                    });
+                }
+            });
+
+            if(payloadData.length === 0) {
+                Swal.fire('Kosong', 'Belum ada nilai yang diinputkan.', 'info');
+                return;
+            }
+
+            // UI Loading Simpan
+            const textSimpan = document.getElementById('textSimpan');
+            const spinnerSimpan = document.getElementById('spinnerSimpan');
+            btnSimpan.disabled = true;
+            btnSimpan.classList.add('opacity-75', 'cursor-not-allowed');
+            textSimpan.innerText = 'Menyimpan...';
+            spinnerSimpan.classList.remove('hidden');
+
+            // Format payload
+            const payload = {
+                action: 'saveGrades',
+                mapel: mapel,
+                data: payloadData
+            };
+
+            try {
+                // Kirim request POST. 
+                // Menggunakan URLSearchParams agar terhindar dari pemblokiran CORS oleh Google Apps Script
+                const response = await fetch(scriptURL, { 
+                    method: 'POST', 
+                    body: new URLSearchParams({ payload: JSON.stringify(payload) })
+                });
+                
+                const res = await response.json();
+                
+                if(res.result === 'success') {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: `${payloadData.length} data nilai berhasil disimpan ke Spreadsheet.`,
+                        icon: 'success',
+                        confirmButtonColor: '#16a34a'
+                    });
+                } else {
+                    throw new Error(res.error || 'Terjadi kesalahan sistem');
+                }
+            } catch (error) {
+                Swal.fire('Gagal Menyimpan', 'Gagal menyimpan ke server: ' + error.message, 'error');
+            } finally {
+                // Restore Button Simpan
+                btnSimpan.disabled = false;
+                btnSimpan.classList.remove('opacity-75', 'cursor-not-allowed');
+                textSimpan.innerText = 'Simpan Semua Nilai';
+                spinnerSimpan.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
